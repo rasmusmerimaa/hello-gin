@@ -15,13 +15,13 @@ spec:
     spec:
       enableServiceLinks: false
       imagePullSecrets:
-        - name: imgcred
+        - name: regcred
       containers:
         - name: hello-gin
-          image: hello-gin
+          image: harbor.codemowers.eu/rasmusmerimaa/hello-gin
           env:
             - name: USERNAME
-              value: world
+              value: rasmusmerimaa
             - name: MY_POD_NAME
               valueFrom:
                 fieldRef:
@@ -29,7 +29,7 @@ spec:
           ports:
             - containerPort: 8000
               name: http
-            - containerPort: 8080
+            - containerPort: 8000
               name: metrics
 ---
 apiVersion: v1
@@ -57,7 +57,7 @@ metadata:
     external-dns.alpha.kubernetes.io/target: traefik.codemowers.ee
 spec:
   rules:
-  - host: hello-foobar.codemowers.ee
+  - host: hello-rasmus.codemowers.ee
     http:
       paths:
       - pathType: Prefix

@@ -20,7 +20,7 @@ spec:
         runAsUser: 1000
       enableServiceLinks: false
       imagePullSecrets:
-        - name: imgcred
+        - name: regcred
       containers:
         - name: hello-gin
           image: harbor.codemowers.eu/{{ .Values.username }}/hello-gin:latest
