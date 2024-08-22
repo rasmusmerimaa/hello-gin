@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: hello-gin
+        customerName: cocacola
     spec:
       securityContext: # podi tase
         fsGroup: 2000

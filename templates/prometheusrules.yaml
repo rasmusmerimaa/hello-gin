@@ -1,0 +1,17 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hello-gin
+spec:
+  groups:
+    - name: hello-gin
+      rules:
+        - alert: GinIsOutOfBottle
+          expr: gin_avg_latency > 5
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: Gin average response latency is high (>5sec)
+

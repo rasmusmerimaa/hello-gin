@@ -9,3 +9,5 @@ spec:
       app: hello-gin
   podMetricsEndpoints:
     - targetPort: 8000
+  podTargetLabels:
+    - customerName
