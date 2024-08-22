@@ -15,7 +15,7 @@ func main() {
 	metrics.Use(router)
 
 	router.GET("/api/v1/gin", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello " + os.Getenv("USERNAME") + " from " + os.Getenv("MY_POD_NAME"))
+		c.String(http.StatusOK, "Hello " + os.Getenv("USERNAME") + " from " + os.Getenv("MY_POD_NAME") + " with log level " + os.Getenv("LOG_LEVEL"))
 	})
 
 	router.Run(":8000")
