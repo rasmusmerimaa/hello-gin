@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   name: hello-gin
 spec:
+  revisionHistoryLimit: 1 # prevent Kube from keeping last 20 revisions of ReplicaSets
   # siin on deploymenti tase
   replicas: 3
   selector:
