@@ -35,17 +35,26 @@ spec:
           volumeMounts:
             - name: nginx-content
               mountPath: /usr/share/nginx/html
+            - name: emptydir
+              mountPath: /usr/cachetaschemustache
           resources:
             limits:
                 cpu: 13m # +15% of requests
-                memory: 250Mi
+                memory: 246Mi
             requests:
               cpu: 11m
-              memory: 125Mi
+              memory: 123Mi
+          securityContext:
+            allowPrivilegeEscalation: false
       volumes:
+        - name: emptydir
+          emptyDir:
+              medium: Memory
+              sizeLimit: 1Gi
         - name: nginx-content
           configMap:
             name: nginx-content
+
 ---
 apiVersion: v1
 kind: Service

@@ -34,11 +34,11 @@ spec:
           app.kubernetes.io/part-of: dragonfly
   resources:
     limits:
-      cpu: 300m # +20% of requests
-      memory: 900Mi
+      cpu: 240m      # +20% of requests
+      memory: 642Mi  # * 2 of requests
     requests:
-      cpu: 240m
-      memory: 500Mi
+      cpu: 200m
+      memory: 321Mi
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
