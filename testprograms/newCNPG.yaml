@@ -1,0 +1,75 @@
+---
+apiVersion: codemowers.cloud/v1beta1
+kind: SecretClaim
+metadata:
+  name: foobar-user
+  namespace: sb-rasmusmerimaa-tq5cg
+spec:
+  size: 32
+  mapping:
+    - key: username
+      value: foobar-user
+    - key: password
+      value: "%(plaintext)s"
+---
+apiVersion: codemowers.cloud/v1beta1
+kind: SecretClaim
+metadata:
+  name: foobar-superuser
+  namespace: sb-rasmusmerimaa-tq5cg
+spec:
+  size: 32
+  mapping:
+    - key: username
+      value: "homer"
+    - key: password
+      value: "%(plaintext)s"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: moobarn
+  namespace: sb-rasmusmerimaa-tq5cg
+spec:
+  instances: 3
+  imageName: "ghcr.io/cloudnative-pg/postgresql:16.4@sha256:f0dc7c50d52f2ff976b94201e78d47a919c838318c3e6ae676dbec67261ef7d8"
+  primaryUpdateStrategy: unsupervised
+  bootstrap:
+    initdb:
+      database: app
+      owner: foobar-user
+      secret:
+        name: foobar-user
+  superuserSecret:
+    name: foobar-superuser
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: topology.kubernetes.io/zone
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "1"
+    limits:
+      memory: "1Gi"
+      cpu: "2"
+  storage:
+    size: 1Gi
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: postgres
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: foobar
+  namespace: sb-rasmusmerimaa-tq5cg
+spec:
+  selector:
+    matchLabels:
+      postgresql: foobar
+  podMetricsEndpoints:
+    - port: metrics

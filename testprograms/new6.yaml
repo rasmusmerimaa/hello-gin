@@ -1,0 +1,169 @@
+---
+apiVersion: codemowers.cloud/v1beta1
+kind: SecretClaim
+metadata:
+  name: minio-rasmus
+spec:
+  size: 32
+  mapping:
+    - key: MINIO_ROOT_USER
+      value: root
+    - key: MINIO_ROOT_PASSWORD
+      value: "%(plaintext)s"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio-rasmus
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: minio-rasmus
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: minio-rasmus
+    spec:
+      containers:
+        - name: minio
+          image: >-
+            mirror.gcr.io/minio/minio:RELEASE.2023-07-18T17-49-40Z@sha256:8879cd0b0c4087817430e21be3ad909d60e9da62fac3e8d9368d9fde51279229
+          args:
+            - server
+            - '--console-address'
+            - 0.0.0.0:9001
+            - >-
+              http://minio-rasmus-{0...3}.minio-rasmus-headless/data
+          workingDir: /data
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+            - name: console
+              containerPort: 9001
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: minio-rasmus
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          securityContext:
+            readOnlyRootFilesystem: true
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+      securityContext:
+        runAsUser: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/part-of
+                    operator: In
+                    values:
+                      - harbor
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - minio-rasmus
+              topologyKey: topology.kubernetes.io/zone
+      enableServiceLinks: false
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: minio
+        volumeMode: Filesystem
+  serviceName: minio-rasmus-headless
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  revisionHistoryLimit: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-rasmus
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 9000
+  selector:
+    app.kubernetes.io/instance: minio-rasmus
+  type: ClusterIP
+  sessionAffinity: ClientIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-rasmus-console
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9001
+      targetPort: 9001
+  selector:
+    app.kubernetes.io/instance: minio-rasmus
+  type: ClusterIP
+  sessionAffinity: ClientIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-rasmus-headless
+  labels:
+    app.kubernetes.io/instance: minio-rasmus
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+  selector:
+    app.kubernetes.io/instance: minio-rasmus
+  type: ClusterIP
+  sessionAffinity: None
+  publishNotReadyAddresses: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-rasmus-console
+  annotations:
+    external-dns.alpha.kubernetes.io/target: traefik.codemowers.ee
+    kubernetes.io/ingress.class: shared
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+spec:
+  tls:
+    - hosts:
+        - '*.codemowers.ee'
+  rules:
+    - host: minio-rasmus-console.codemowers.ee
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-rasmus-console
+                port:
+                  number: 9001

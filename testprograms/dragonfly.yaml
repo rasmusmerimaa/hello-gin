@@ -1,0 +1,65 @@
+---
+apiVersion: codemowers.cloud/v1beta1
+kind: SecretClaim
+metadata:
+  name: dragonfly-ephemeral
+  namespace: sb-rasmusmerimaa-tq5cg
+spec:
+  size: 32
+  mapping:
+    - key: password
+      value: "%(plaintext)s"
+    - key: REDIS_URI
+      value: "redis://:%(plaintext)s@dragonfly-ephemeral"
+---
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  name: dragonfly-ephemeral
+  namespace: sb-rasmusmerimaa-tq5cg
+spec:
+  image: "docker.dragonflydb.io/dragonflydb/dragonfly:v1.21.2@sha256:4a253dffa1f0416c454a758dcbaa86c29c4065aba44b5240fa25e55c5d89baf3"
+  authentication:
+    passwordFromSecret:
+      key: password
+      name: dragonfly-ephemeral
+  replicas: 2
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app: dragonfly-ephemeral
+          app.kubernetes.io/part-of: dragonfly
+  resources:
+    limits:
+      cpu: 300m # +20% of requests
+      memory: 900Mi
+    requests:
+      cpu: 240m
+      memory: 500Mi
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - amd64
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: dragonfly-ephemeral
+spec:
+  selector:
+    matchLabels:
+      app: dragonfly-ephemeral
+      app.kubernetes.io/part-of: dragonfly
+  podTargetLabels:
+    - app
+  podMetricsEndpoints:
+    - port: admin
+  
