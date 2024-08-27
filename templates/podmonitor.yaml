@@ -8,6 +8,6 @@ spec:
     matchLabels:
       app: hello-gin
   podMetricsEndpoints:
-    - targetPort: 8000
+    - port: http
   podTargetLabels:
     - customerName
