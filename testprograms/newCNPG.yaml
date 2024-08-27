@@ -2,20 +2,20 @@
 apiVersion: codemowers.cloud/v1beta1
 kind: SecretClaim
 metadata:
-  name: foobar-user
+  name: moobarn-user
   namespace: sb-rasmusmerimaa-tq5cg
 spec:
   size: 32
   mapping:
     - key: username
-      value: foobar-user
+      value: moobarn-user
     - key: password
       value: "%(plaintext)s"
 ---
 apiVersion: codemowers.cloud/v1beta1
 kind: SecretClaim
 metadata:
-  name: foobar-superuser
+  name: moobarn-superuser
   namespace: sb-rasmusmerimaa-tq5cg
 spec:
   size: 32
@@ -31,26 +31,26 @@ metadata:
   name: moobarn
   namespace: sb-rasmusmerimaa-tq5cg
 spec:
-  instances: 3
+  instances: 2
   imageName: "ghcr.io/cloudnative-pg/postgresql:16.4@sha256:f0dc7c50d52f2ff976b94201e78d47a919c838318c3e6ae676dbec67261ef7d8"
   primaryUpdateStrategy: unsupervised
   bootstrap:
     initdb:
       database: app
-      owner: foobar-user
+      owner: moobarn-user
       secret:
-        name: foobar-user
+        name: moobarn-user
   superuserSecret:
-    name: foobar-superuser
+    name: moobarn-superuser
   affinity:
     enablePodAntiAffinity: true
     topologyKey: topology.kubernetes.io/zone
   resources:
     requests:
-      memory: "512Mi"
+      memory: "400Mi"
       cpu: "1"
     limits:
-      memory: "1Gi"
+      memory: "800Mi"
       cpu: "2"
   storage:
     size: 1Gi
