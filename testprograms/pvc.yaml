@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-ci
+spec:
+  # This PV should be automatically deleted afterwards
+  # reclaim policy is in storage class
+  storageClassName: woodpecker
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-mysql
+spec:
+  # This PV should be retained
+  storageClassName: mysql
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-mysql
+spec:
+  containers:
+    - name: myfrontend
+      image: nicolaka/netshoot:latest@sha256:a20c2531bf35436ed3766cd6cfe89d352b050ccc4d7005ce6400adf97503da1b
+      command:
+        - sleep
+        - "9999999"
+      volumeMounts:
+        - mountPath: "/var/lib/mysql"
+          name: test-mysql
+        - mountPath: "/var/lib/ci"
+          name: test-ci
+        - mountPath: "/var/lib/cache"
+          name: cache-volume
+        - mountPath: "/tmp"
+          name: tmp-volume
+  volumes:
+    - name: cache-volume
+      emptyDir:
+        sizeLimit: 10Mi # this is not respected on this particular Kube cluster
+                        # malicious pod can fill host root filesystem
+                        # a good idea would be a seperate filesystem under the hosts' /var/lib/containers
+                        # Kube destroys pod after certain time, if volume size is exceeded.
+    - name: tmp-volume
+      emptyDir:
+        medium: Memory
+        sizeLimit: 10Mi
+    - name: test-mysql
+      persistentVolumeClaim:
+        claimName: test-mysql
+    - name: test-ci
+      persistentVolumeClaim:
+        claimName: test-ci

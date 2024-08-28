@@ -1,0 +1,20 @@
+apiVersion: resource.streamnative.io/v1alpha1
+kind: PulsarNamespace
+metadata:
+  name: rasmus-pulsar-namespace
+spec:
+  name: rasmus-tenant/rasmusns
+  connectionRef:
+    name: rasmus-pulsar-connection
+  backlogQuotaLimitSize: 1Gi
+  backlogQuotaLimitTime: 24h
+  bundles: 16
+  messageTTL: 1h
+  # backlogQuotaRetentionPolicy: producer_request_hold
+  # maxProducersPerTopic: 2
+  # maxConsumersPerTopic: 2
+  # optional
+  # maxConsumersPerSubscription: 2
+  # retentionTime: 20h
+  # retentionSize: 2Gi
+  # lifecyclePolicy: CleanUpAfterDeletion

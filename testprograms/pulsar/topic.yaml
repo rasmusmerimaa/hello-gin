@@ -1,0 +1,21 @@
+apiVersion: resource.streamnative.io/v1alpha1
+kind: PulsarTopic
+metadata:
+  name: "rasmus-pulsar-topic123"
+spec:
+  name: persistent://rasmus-tenant/rasmusns/topic123
+  connectionRef:
+    name: "rasmus-pulsar-connection"
+# persistent: true
+# partitions: 8
+# maxProducers: 8
+# maxConsumers: 8
+# messageTTL:
+# maxUnAckedMessagesPerConsumer:
+# maxUnAckedMessagesPerSubscription:
+# retentionTime: 20h
+# retentionSize: 2Gi
+# backlogQuotaLimitTime: 24h
+# backlogQuotaLimitSize: 1Gi
+# backlogQuotaRetentionPolicy: producer_request_hold
+# lifecyclePolicy: CleanUpAfterDeletion
