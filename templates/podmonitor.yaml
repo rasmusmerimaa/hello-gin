@@ -11,3 +11,5 @@ spec:
     - port: http
   podTargetLabels:
     - customerName
+    - namespace
+    - hello-gin
